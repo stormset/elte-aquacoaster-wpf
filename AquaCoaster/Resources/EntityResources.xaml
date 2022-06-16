@@ -1,0 +1,24 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:models="clr-namespace:AquaCoaster.Resources"
+                    xmlns:entities="clr-namespace:AquaCoaster.Model.Entities">
+
+    <models:ResourceModel x:Key="Dirt"                 Order="0"  Visible="false"  CategoryName="Terrain"    Image="/Resources/Grass.png"              TypeReference="entities:Dirt"/>
+    <models:ResourceModel x:Key="Water"                Order="1"  CategoryName="Terrain"    Image="/Resources/Water.png"              TypeReference="entities:Water"/>
+    <models:ResourceModel x:Key="Pavement"             Order="2"  CategoryName="Terrain"    Image="/Resources/Pavement.png"           TypeReference="entities:Pavement"/>
+    <models:ResourceModel x:Key="Pier"                 Order="3"  CategoryName="Terrain"    Image="/Resources/Pier.png"               TypeReference="entities:Pier"/>
+    <models:ResourceModel x:Key="Gate"                 Order="4"                            Image="/Resources/BigGateClosed.png"      TypeReference="entities:Gate"/>
+    <models:ResourceModel x:Key="Gate_OPEN"            Order="5"                            Image="/Resources/BigGate.png"            TypeReference="entities:Gate"/>
+    <models:ResourceModel x:Key="Carousel"             Order="6"  CategoryName="Land Game"  Image="/Resources/Carousel.png"           TypeReference="entities:Carousel"/>
+    <models:ResourceModel x:Key="SportPool"            Order="7"  CategoryName="Land Game"  Image="/Resources/SportPool.png"          TypeReference="entities:SportPool"/>
+    <models:ResourceModel x:Key="FerrisWheel"            Order="8"  CategoryName="Land Game"  Image="/Resources/FerrisWheel.png"          TypeReference="entities:FerrisWheel"/>
+    <models:ResourceModel x:Key="RollerCoaster"            Order="9"  CategoryName="Land Game"  Image="/Resources/RollerCoaster.png"          TypeReference="entities:RollerCoaster"/>
+    <models:ResourceModel x:Key="PleasureIsland"       Order="10"  CategoryName="Water Game" Image="/Resources/PleasureIsland.png"     TypeReference="entities:PleasureIsland"/>
+    <models:ResourceModel x:Key="FishNChipsRestaurant" Order="11"  CategoryName="Food Stall" Image="/Resources/ConcreteRestaurant.png" TypeReference="entities:FishNChipsRestaurant"/>
+    <models:ResourceModel x:Key="Coffee"               Order="12"  CategoryName="Food Stall" Image="/Resources/Coffee.png"            TypeReference="entities:Coffee"/>
+    <models:ResourceModel x:Key="Plant"                Order="13" CategoryName="Plants"     Image="/Resources/Plant.jpg"              TypeReference="entities:Plant"/>
+    <models:ResourceModel x:Key="Tree"                Order="14" CategoryName="Plants"     Image="/Resources/Tree.png"              TypeReference="entities:Tree"/>
+    <models:ResourceModel x:Key="FoodTruck"                Order="15" CategoryName="Food Stall"     Image="/Resources/FoodTruck.png"              TypeReference="entities:FoodTruck"/>
+    <models:ResourceModel x:Key="WaterSlide"                Order="16" CategoryName="Water Game"     Image="/Resources/WaterSlide.png"              TypeReference="entities:WaterSlide"/>
+
+</ResourceDictionary>

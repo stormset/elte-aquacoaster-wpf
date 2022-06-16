@@ -1,0 +1,81 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="AquaCoaster\**" />
+    <EmbeddedResource Remove="AquaCoaster\**" />
+    <None Remove="AquaCoaster\**" />
+    <Page Remove="AquaCoaster\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\BigGate.png" />
+    <None Remove="Resources\BigGateClosed.png" />
+    <None Remove="Resources\Carousel.png" />
+    <None Remove="Resources\FerrisWheel.png" />
+    <None Remove="Resources\RollerCoaster.png" />
+    <None Remove="Resources\Coffee.png" />
+    <None Remove="Resources\Tree.png" />
+    <None Remove="Resources\FoodTruck.png" />
+    <None Remove="Resources\WaterSlide.png" />
+    <None Remove="Resources\ConcreteLandGame.png" />
+    <None Remove="Resources\Gate.png" />
+    <None Remove="Resources\Grass.png" />
+    <None Remove="Resources\grass2.png" />
+    <None Remove="Resources\Pavement.png" />
+    <None Remove="Resources\Pier.png" />
+    <None Remove="Resources\PleasureIsland.png" />
+    <None Remove="Resources\SportPool.png" />
+    <None Remove="Resources\Water.jpg" />
+    <None Remove="Resources\Water.png" />
+    <None Remove="Resources\Woman.png" />
+    <None Remove="Resources\Mechanic.png" />
+    <None Remove="Resources\ConcreteGame.png" />
+    <None Remove="Resources\ConcreteRestaurant.png" />
+    <None Remove="Resources\Plant.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathConverter" Version="1.2.1.6" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
+    <PackageReference Include="WPF-UI" Version="1.2.2" />
+    <PackageReference Include="Wpf.Controls.PanAndZoom" Version="2.3.4" />
+    <PackageReference Include="WriteableBitmapEx" Version="1.6.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\BigGate.png" />
+    <Resource Include="Resources\BigGateClosed.png" />
+    <Resource Include="Resources\Carousel.png" />
+    <Resource Include="Resources\FerrisWheel.png" />
+    <Resource Include="Resources\RollerCoaster.png" />
+    <Resource Include="Resources\Coffee.png" />
+    <Resource Include="Resources\Tree.png" />
+    <Resource Include="Resources\FoodTruck.png" />
+    <Resource Include="Resources\WaterSlide.png" />
+    <Resource Include="Resources\Gate.png" />
+    <Resource Include="Resources\Grass.png" />
+    <Resource Include="Resources\Pavement.png" />
+    <Resource Include="Resources\Pier.png" />
+    <Resource Include="Resources\PleasureIsland.png" />
+    <Resource Include="Resources\SportPool.png" />
+    <Resource Include="Resources\Water.png" />
+    <Resource Include="Resources\Woman.png" />
+    <Resource Include="Resources\Mechanic.png" />
+    <Resource Include="Resources\ConcreteRestaurant.png" />
+    <Resource Include="Resources\Plant.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Resources\ImageResources.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+  </ItemGroup>
+
+</Project>

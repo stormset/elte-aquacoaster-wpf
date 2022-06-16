@@ -1,0 +1,811 @@
+﻿<Window x:Class="AquaCoaster.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpfui="clr-namespace:WPFUI.Controls;assembly=WPFUI"
+        xmlns:paz="clr-namespace:Wpf.Controls.PanAndZoom;assembly=Wpf.Controls.PanAndZoom"
+        xmlns:math="http://hexinnovation.com/math"
+        xmlns:local="clr-namespace:AquaCoaster.View"
+        xmlns:entities="clr-namespace:AquaCoaster.Model.Entities"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        mc:Ignorable="d"
+        Title="AquaCoaster" Height="800" Width="1300" MinHeight="600" MinWidth="600"
+        WindowStartupLocation="CenterScreen" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        >
+
+    <Window.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding EscapePressedCommand}" />
+    </Window.InputBindings>
+
+    <Window.Resources>
+        <System:Int32 x:Key="PIXEL_PER_UNIT">50</System:Int32>
+        <!--Converters-->
+        <math:MathConverter x:Key="math" />
+        <local:IsOfTypeConverter x:Key="IsOfTypeConverter" />
+        <!--Game info style-->
+        <Style x:Key="game_info" TargetType="{x:Type StackPanel}">
+        </Style>
+        <!--Placeable selector buttons-->
+        <Style x:Key="placeable_button" TargetType="{x:Type Button}">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="#324463"/>
+            <Setter Property="Foreground" Value="WhiteSmoke"/>
+            <Setter Property="Button.Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="DarkSlateGray" Direction="-100" ShadowDepth="4" BlurRadius="5" Opacity="0.3" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="5" BorderThickness="1" Padding="16,8,16,8" BorderBrush="#393939" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3c5580"/>
+                                <Setter Property="Button.Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="Black" Direction="-80" ShadowDepth="3" BlurRadius="5" Opacity="0.5" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!--Scrollbar Thumbs-->
+        <Style x:Key="ScrollThumbs" TargetType="{x:Type Thumb}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Grid x:Name="Grid">
+                            <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Fill="Transparent" />
+                            <Border x:Name="Rectangle1" CornerRadius="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"  Background="{TemplateBinding Background}" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Tag" Value="Horizontal">
+                                <Setter TargetName="Rectangle1" Property="Width" Value="Auto" />
+                                <Setter TargetName="Rectangle1" Property="Height" Value="7" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!--ScrollBars-->
+        <Style x:Key="{x:Type ScrollBar}" TargetType="{x:Type ScrollBar}">
+            <Setter Property="Stylus.IsFlicksEnabled" Value="false" />
+            <Setter Property="Foreground" Value="#393b3d" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid x:Name="GridRoot" Width="12" Background="{TemplateBinding Background}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="0.00001*" />
+                            </Grid.RowDefinitions>
+
+                            <Track x:Name="PART_Track" Grid.Row="0" IsDirectionReversed="true" Focusable="false">
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb" Background="{TemplateBinding Foreground}" Style="{DynamicResource ScrollThumbs}" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton x:Name="PageUp" Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="false" />
+                                </Track.IncreaseRepeatButton>
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton x:Name="PageDown" Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="false" />
+                                </Track.DecreaseRepeatButton>
+                            </Track>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger SourceName="Thumb" Property="IsMouseOver" Value="true">
+                                <Setter Value="{DynamicResource ButtonSelectBrush}" TargetName="Thumb" Property="Background" />
+                            </Trigger>
+                            <Trigger SourceName="Thumb" Property="IsDragging" Value="true">
+                                <Setter Value="{DynamicResource DarkBrush}" TargetName="Thumb" Property="Background" />
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter TargetName="Thumb" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="GridRoot" Property="LayoutTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="-90" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="PART_Track" Property="LayoutTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="-90" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Width" Value="Auto" />
+                                <Setter Property="Height" Value="12" />
+                                <Setter TargetName="Thumb" Property="Tag" Value="Horizontal" />
+                                <Setter TargetName="PageDown" Property="Command" Value="ScrollBar.PageLeftCommand" />
+                                <Setter TargetName="PageUp" Property="Command" Value="ScrollBar.PageRightCommand" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OpenButtonStyle" TargetType="wpfui:Button" BasedOn="{StaticResource placeable_button}">
+            <Setter Property="FontWeight" Value="ExtraBold"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsParkOpen}" Value="False">
+                    <Setter Property="Background" Value="ForestGreen"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsParkOpen}" Value="True">
+                    <Setter Property="Background" Value="Red"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="DefaultContent">
+            <!--Game info card content-->
+            <StackPanel Orientation="Vertical" Style="{StaticResource game_info}">
+                <Viewbox 
+                                 StretchDirection="DownOnly"
+                                 VerticalAlignment="Top"
+                                 HorizontalAlignment="Center">
+                    <TextBlock Foreground="WhiteSmoke" FontSize="16" FontWeight="Bold" Text="{Binding Name}"/>
+                </Viewbox>
+                <StackPanel Margin="0,10,0,0" Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Center">
+                    <TextBlock Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="16" Text="{Binding IsParkOpen, Converter={StaticResource math}, ConverterParameter='format((x == True ? &quot;OPENED&quot; : &quot;CLOSED&quot;))'}"/>
+                </StackPanel>
+                <StackPanel Margin="0,12,0,10" Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Center">
+                    <TextBlock Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="28" FontWeight="Bold" Text="{Binding GameTime}"/>
+                </StackPanel>
+                <Grid HorizontalAlignment="Stretch" Margin="0,8,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5*"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Center">
+                        <TextBlock Margin="8" Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="12" FontWeight="Bold" Text="Budget"/>
+                        <TextBlock Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="28" FontWeight="Bold" Text="{Binding Budget}"/>
+                    </StackPanel>
+                    <GridSplitter ResizeDirection="Columns" Grid.Column="1" Height="Auto" Width="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
+                    <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
+                        <TextBlock Margin="8" Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="12" FontWeight="Bold" Text="Visitors"/>
+                        <TextBlock Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="28" FontWeight="Bold" Text="{Binding VisitorCount}"/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel MaxWidth="110">
+                    <TextBlock Margin="0,8,0,4" Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="14" FontWeight="Bold" Text="Speed"/>
+                    <Slider Minimum="334" Maximum="1000" Value="{Binding TimeInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Interval="333"/>
+                    <Grid HorizontalAlignment="Stretch" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Foreground="WhiteSmoke" HorizontalAlignment="Left" FontSize="12" Text="3x"/>
+                        <TextBlock Grid.Column="1" Foreground="WhiteSmoke" HorizontalAlignment="Center" FontSize="12" Text="2x"/>
+                        <TextBlock Grid.Column="2" Foreground="WhiteSmoke" HorizontalAlignment="Right" FontSize="12" Text="1x"/>
+                    </Grid>
+                </StackPanel>
+                <Grid Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="8*" />
+                        <ColumnDefinition Width="2*" MinWidth="200px" MaxWidth="260px" />
+                    </Grid.ColumnDefinitions>
+
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FacilityInfoContent">
+            <Grid>
+                <Grid Panel.ZIndex="1000">
+                    <wpfui:Button VerticalAlignment="Top" Padding="8,4,8,4" HorizontalAlignment="Right" Background="DimGray" HoverBackground="LightGray" Content="X" Command="{Binding ExitInfoPanelCommand}" />
+                </Grid>
+                <StackPanel Margin="16,0,16,0" Panel.ZIndex="10" Focusable="True" Orientation="Vertical" Style="{StaticResource game_info}">
+                    <TextBlock Foreground="WhiteSmoke" Margin="0,4,0,16" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold" Text="{Binding ClickedInfrastructure.Infrastructure.Name}"/>
+                    <StackPanel Orientation="Vertical" Style="{StaticResource game_info}">
+                        <Grid HorizontalAlignment="Stretch" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="0.8"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Center">
+                                <Label Margin="4" HorizontalAlignment="Center" Content="Guests Waiting" />
+                                <TextBlock HorizontalAlignment="Center" Foreground="WhiteSmoke" FontSize="16" FontWeight="SemiBold" Text="{Binding ClickedInfrastructure.InWaitingQueue}"/>
+                            </StackPanel>
+                            <GridSplitter ResizeDirection="Columns" Grid.Column="1" Height="Auto" Width="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
+                            <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
+                                <Label Margin="4" HorizontalAlignment="Center" Content="Status" />
+                                <TextBlock HorizontalAlignment="Center" Foreground="WhiteSmoke" FontSize="14" FontWeight="SemiBold" Text="{Binding ClickedInfrastructure.StatusString}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Style="{StaticResource game_info}" Margin="0,16,0,0">
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*"/>
+                                <ColumnDefinition Width="0.8"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" HorizontalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="8*"/>
+                                    <RowDefinition Height="2*"/>
+                                </Grid.RowDefinitions>
+                                <ProgressBar VerticalAlignment="Bottom" MinWidth="70" Grid.Row="0" Grid.Column="0"  Value="{Binding ClickedInfrastructure.CurrentUsers}"  Maximum="{Binding ClickedInfrastructure.Infrastructure.Capacity}"/>
+                                <Label VerticalAlignment="Top" Grid.Row="1" Margin="4" HorizontalAlignment="Center" Content="{Binding ClickedInfrastructure.CapacityString}"/>
+                            </Grid>
+                            <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Right">
+                                <Label Content="Minimum capacity" />
+                                <wpfui:NumberBox
+                                            FontSize="12"
+                                            FontWeight="Bold"
+                                            Height="30"
+                                            Margin="8"
+                                            DecimalPlaces="0"
+                                            Icon="People24"
+                                            IconFilled="False"
+                                            Max="{Binding ClickedInfrastructure.Infrastructure.Capacity}"
+                                            Min="0"
+                                            Value="{Binding ClickedInfrastructure.MinimumCapacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <i:Interaction.Behaviors>
+                                        <local:TextBoxEnterKeyUpdateBehavior />
+                                    </i:Interaction.Behaviors>
+                                </wpfui:NumberBox>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,8,0,0">
+                        <Label Content="Use fee" HorizontalAlignment="Center"/>
+                        <wpfui:NumberBox
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Height="30"
+                        MinWidth="140"
+                        Margin="8"
+                        DecimalPlaces="0"
+                        Icon="Money24"
+                        IconFilled="False"
+                        Max="{Binding MaxUseFee}"
+                        Min="0"
+                        Value="{Binding ClickedInfrastructure.UseFee, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <i:Interaction.Behaviors>
+                                <local:TextBoxEnterKeyUpdateBehavior />
+                            </i:Interaction.Behaviors>
+                        </wpfui:NumberBox>
+                    </StackPanel>
+                    <wpfui:Button IsDefault="True" VerticalAlignment="Bottom" Margin="0,24,0,0" HorizontalAlignment="Center" Appearance="Secondary" Content="OK" Command="{Binding OKInfoPanelCommand}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="GateInfoContent">
+            <Grid>
+                <Grid Panel.ZIndex="1000">
+                    <wpfui:Button VerticalAlignment="Top" Padding="8,4,8,4" HorizontalAlignment="Right" Background="DimGray" HoverBackground="LightGray" Content="X" Command="{Binding ExitInfoPanelCommand}" />
+                </Grid>
+
+                <TextBlock Grid.Row="0" Foreground="WhiteSmoke" Margin="0,4,0,16" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold" Text="{Binding ClickedInfrastructure.Infrastructure.Name}"/>
+                <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,8,0,0">
+                    <wpfui:Button VerticalAlignment="Bottom" Margin="24,32,24,24" HorizontalAlignment="Center" Style="{StaticResource OpenButtonStyle}" Content="{Binding IsParkOpen, Converter={StaticResource math}, ConverterParameter='format((x == True ? &quot;Close&quot; : &quot;Open&quot;))'}" Command="{Binding OpenParkCommand}" />
+                    <Label Content="Ticket price" HorizontalAlignment="Center" Margin="8,0,0,0"/>
+                    <wpfui:NumberBox
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Height="30"
+                        MinWidth="180"
+                        Margin="8"
+                        DecimalPlaces="0"
+                        Icon="Money24"
+                        IconFilled="False"
+                        Max="{Binding MaxEntryFee}"
+                        Min="0"
+                        Value="{Binding ClickedInfrastructure.EntryFee, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+                        <i:Interaction.Behaviors>
+                            <local:TextBoxEnterKeyUpdateBehavior />
+                        </i:Interaction.Behaviors>
+                    </wpfui:NumberBox>
+
+                    <Label Content="Mechanics" HorizontalAlignment="Center" Margin="8,0,0,0"/>
+                    <wpfui:NumberBox
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Height="30"
+                        MinWidth="180"
+                        Margin="8"
+                        DecimalPlaces="0"
+                        Icon="Wrench24"
+                        IconFilled="False"
+                        Max="10"
+                        Min="0"
+                        Value="{Binding MechanicCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+                        <i:Interaction.Behaviors>
+                            <local:TextBoxEnterKeyUpdateBehavior />
+                        </i:Interaction.Behaviors>
+                    </wpfui:NumberBox>
+                    <wpfui:Button IsDefault="True" VerticalAlignment="Bottom" Margin="0,16,0,0" HorizontalAlignment="Center" Appearance="Secondary" Content="OK" Command="{Binding OKInfoPanelCommand}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="VisitorInfoContent">
+            <Grid>
+                <Grid Panel.ZIndex="1000">
+                    <wpfui:Button VerticalAlignment="Top" Padding="8,4,8,4" HorizontalAlignment="Right" Background="DimGray" HoverBackground="LightGray" Content="X" Command="{Binding ExitInfoPanelCommand}" />
+                </Grid>
+
+                <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,16,0,32">
+                    <StackPanel Orientation="Vertical" Style="{StaticResource game_info}">
+                        <Grid HorizontalAlignment="Stretch" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="0.8"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel MinWidth="120" Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Center">
+                                <Label Margin="4" HorizontalAlignment="Center" Content="Money" />
+                                <TextBlock HorizontalAlignment="Center" Foreground="WhiteSmoke" FontSize="16" FontWeight="SemiBold" Text="{Binding ClickedPerson.Money}"/>
+                            </StackPanel>
+                            <GridSplitter ResizeDirection="Columns" Grid.Column="1" Height="Auto" Width="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
+                            <StackPanel MinWidth="120" Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
+                                <Label Margin="4" HorizontalAlignment="Center" Content="Status" />
+                                <TextBlock HorizontalAlignment="Center" Foreground="WhiteSmoke" FontSize="14" FontWeight="SemiBold" Text="{Binding ClickedPerson.StatusString}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                    <Grid HorizontalAlignment="Center" Margin="0,24,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Label MinWidth="45" VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="0" Margin="8,0,0,0" HorizontalAlignment="Left" Content="Mood: "/>
+                            <ProgressBar VerticalAlignment="Top" MinWidth="80" Grid.Row="0" Margin="0,2,0,0" Grid.Column="1"  Value="{Binding ClickedPerson.Mood}"  Maximum="100"/>
+                            <Label VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="2" Margin="4,0,0,0" HorizontalAlignment="Center" FontWeight="Bold" Content="{Binding ClickedPerson.MoodString}"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid HorizontalAlignment="Center" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Label MinWidth="45" VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="0" Margin="8,0,0,0" HorizontalAlignment="Left" Content="Food: "/>
+                            <ProgressBar VerticalAlignment="Top" MinWidth="80" Grid.Row="0" Margin="0,2,0,0" Grid.Column="1"  Value="{Binding ClickedPerson.Food}"  Maximum="100"/>
+                            <Label VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="2" Margin="4,0,0,0" HorizontalAlignment="Center" FontWeight="Bold" Content="{Binding ClickedPerson.FoodString}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+                
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="MyContentStyle" TargetType="ContentPresenter">
+            <Setter Property="ContentTemplate" Value="{StaticResource DefaultContent}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ClickedPerson.Person, Converter={StaticResource IsOfTypeConverter}, ConverterParameter={x:Type entities:Visitor}}" Value="Visible">
+                    <Setter Property="ContentTemplate" Value="{StaticResource VisitorInfoContent}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ClickedInfrastructure.Infrastructure, Converter={StaticResource IsOfTypeConverter}, ConverterParameter={x:Type entities:Facility}}" Value="Visible">
+                    <Setter Property="ContentTemplate" Value="{StaticResource FacilityInfoContent}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ClickedInfrastructure.Infrastructure, Converter={StaticResource IsOfTypeConverter}, ConverterParameter={x:Type entities:Gate}}" Value="Visible">
+                    <Setter Property="ContentTemplate" Value="{StaticResource GateInfoContent}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+
+        <Grid Panel.ZIndex="1000" Visibility="{Binding MenuOpen}">
+            <Grid.Background>
+                <SolidColorBrush Color="Black" Opacity=".5"/>
+            </Grid.Background>
+            <wpfui:Card
+                    MinHeight="100"
+                    MaxHeight="200"
+                    Padding="-2"
+                    Panel.ZIndex="10"
+                    Grid.Column="0"
+                    Width="200"
+                    Height="150"
+                    >
+                <Border
+                        Margin="0"
+                        Padding="6"
+                        CornerRadius="6"
+                        BorderThickness="0">
+                    <StackPanel>
+                        <TextBlock Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="WhiteSmoke" FontSize="14" FontWeight="Bold" Text="Name"/>
+                        <wpfui:TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10" HorizontalAlignment="Center" Width="180" TextAlignment="Center" Padding="0" Foreground="WhiteSmoke" FontSize="12" Height="25">
+                            <i:Interaction.Behaviors>
+                                <local:TextBoxEnterKeyUpdateBehavior />
+                            </i:Interaction.Behaviors>
+                        </wpfui:TextBox>
+
+                        <wpfui:Button Appearance="Primary" IsDefault="True" Margin="10" Command="{Binding NameParkCommand}" Content="Start" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <Border.Effect>
+                        <DropShadowEffect Direction="-75" ShadowDepth="2" Opacity="0.6" BlurRadius="25" Color="Black"/>
+                    </Border.Effect>
+                    <Border.Background>
+                        <RadialGradientBrush>
+                            <GradientStop Offset="0" Color="#202020" />
+                            <GradientStop Offset="1" Color="#202020" />
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+            </wpfui:Card>
+        </Grid>
+        <Grid Panel.ZIndex="1000" Visibility="{Binding HelpOpen}">
+            <Grid.Background>
+                <SolidColorBrush Color="Black" Opacity=".5"/>
+            </Grid.Background>
+            <wpfui:Card
+                    MaxWidth="400"
+                    MaxHeight="260"
+                    Padding="-2"
+                    Panel.ZIndex="10"
+                    Grid.Column="0"
+                    >
+                <Border
+                        Margin="0"
+                        Padding="6"
+                        CornerRadius="6"
+                        BorderThickness="0">
+                    <StackPanel>
+                        <TextBlock Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="WhiteSmoke" FontSize="14" FontWeight="Bold" Text="About"/>
+                        <ScrollViewer MaxHeight="160">
+                            <TextBlock ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+         ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10" TextAlignment="Justify" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Top" Foreground="WhiteSmoke" FontSize="12" Text="Egy termék, szolgáltatás célja, hogy minél több embert el lehessen vele érni, ezáltal növelni sikerének százalékát. Projektünkkel próbáltunk hasonlót alkotni, például azzal, hogy a programot lehető legkönnyebben kezelhetően, legszórakoztatóbban tervezzük meg. Egy játék esetében nehéz felkelteni minden korosztály érdeklődését, így a további tervezésekben, például grafika, próbáltuk a fiatalok mai ízlését követni.
+Egy termék, szolgáltatás célja, hogy minél több embert el lehessen vele érni, ezáltal növelni sikerének százalékát. Projektünkkel próbáltunk hasonlót alkotni, például azzal, hogy a programot lehető legkönnyebben kezelhetően, legszórakoztatóbban tervezzük meg. Egy játék esetében nehéz felkelteni minden korosztály érdeklődését, így a további tervezésekben, például grafika, próbáltuk a fiatalok mai ízlését követni."/>
+                        </ScrollViewer>
+                        <wpfui:Button Appearance="Primary" IsDefault="True" Margin="10" Command="{Binding ToggleHelpCommand}" Content="OK" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <Border.Effect>
+                        <DropShadowEffect Direction="-75" ShadowDepth="2" Opacity="0.6" BlurRadius="25" Color="Black"/>
+                    </Border.Effect>
+                    <Border.Background>
+                        <RadialGradientBrush>
+                            <GradientStop Offset="0" Color="#202020" />
+                            <GradientStop Offset="1" Color="#202020" />
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+            </wpfui:Card>
+        </Grid>
+        <DockPanel Background="Transparent">
+            <wpfui:NavigationStore
+                x:Name="RootNavigation"
+                Width="58"
+                Grid.Column="0"
+                Margin="2,0,2,0">
+                <wpfui:NavigationStore.Items>
+                    <wpfui:NavigationItem
+                        Content="Demolish"
+                        Icon="DeleteOff24"
+                        IsActive="{Binding DemolishModeActive}"
+                        Command="{Binding DemolishModeCommand}"
+                        Tag="library"/>
+                </wpfui:NavigationStore.Items>
+                <wpfui:NavigationStore.Footer>
+                    <wpfui:NavigationItem
+                        Content="New Game"
+                        Icon="Games24"
+                        Command="{Binding NewGameCommand}"
+                        Tag="library"/>
+                    <wpfui:NavigationItem
+                        Content="Exit"
+                        Icon="DoorArrowLeft24"
+                        Command="{Binding ExitGameCommand}"
+                        Tag="library"/>
+                    <wpfui:NavigationItem
+                        Content="Help"
+                        Icon="QuestionCircle24"
+                        Command="{Binding ToggleHelpCommand}"
+                        Tag="help" />
+                </wpfui:NavigationStore.Footer>
+            </wpfui:NavigationStore>
+
+            <Grid Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="8*" />
+                    <ColumnDefinition Width="2*" MinWidth="200px" MaxWidth="260px" />
+                </Grid.ColumnDefinitions>
+
+                <Grid x:Name="LayoutRoot" Grid.Column="0">
+
+                    <Grid x:Name="Overlay" Panel.ZIndex="10">
+                        <wpfui:Snackbar
+                            x:Name="RootSnackbar"
+                            Foreground="WhiteSmoke"
+                            Title="{Binding PopupData.Title}"
+                            Message="{Binding PopupData.Message}"
+                            Icon="{Binding PopupData.Icon}"
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="1"
+                            MaxWidth="380"
+                            Timeout="3000">
+
+                            <wpfui:Snackbar.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.MergedDictionaries>
+                                        <ResourceDictionary Source="SnackbarStyle.xaml"/>
+                                    </ResourceDictionary.MergedDictionaries>
+                                </ResourceDictionary>
+                            </wpfui:Snackbar.Resources>
+
+                            <wpfui:Snackbar.Style>
+                                <Style TargetType="{x:Type wpfui:Snackbar}" BasedOn="{StaticResource SnackbarStyle}" xmlns:behaviours="clr-namespace:AquaCoaster.View">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TriggerPopup}" Value="True">
+                                            <Setter Property="behaviours:SnackbarBehaviour.ExpandTrigger" Value="True"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding TriggerPopup}" Value="False">
+                                            <Setter Property="behaviours:SnackbarBehaviour.ExpandTrigger" Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </wpfui:Snackbar.Style>
+                        </wpfui:Snackbar>
+                    </Grid>
+
+                    <paz:ZoomBorder ZoomSpeed="1.2"
+                        EnableGestureZoom="True"
+                        MaxZoomX="5" MaxZoomY="5"  MinZoomX="1" MinZoomY="1" 
+                        MaxOffsetX="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={StaticResource math}, ConverterParameter=x}"
+                        MaxOffsetY="{Binding RelativeSource={RelativeSource Self}, Path=ActualHeight, Converter={StaticResource math}, ConverterParameter=x}"
+                        MinOffsetX="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={StaticResource math}, ConverterParameter=-x}"
+                        MinOffsetY="{Binding RelativeSource={RelativeSource Self}, Path=ActualHeight, Converter={StaticResource math}, ConverterParameter=-x}"
+                        Stretch="Uniform" ClipToBounds="True" Focusable="True" EnableConstrains="False"
+                        Background="#292a2b">
+                        <local:GameGridView Rows="{Binding Rows}" Columns="{Binding Columns}" PixelPerUnit="{StaticResource PIXEL_PER_UNIT}"
+                                        TimeInterval="{Binding TimeInterval}"
+                                        InfrastructureElements="{Binding InfrastructureFields}"
+                                        PersonElements="{Binding PersonFields}"
+                                        GridClick="{Binding GridClickCommand}"
+                                        GridHover="{Binding GridHoverCommand}"
+                                        GridHoverEnd="{Binding GridHoverEndCommand}"
+                                        Cursor="{Binding Cursor}">
+                            <Grid  x:Name="CurrentlyHoveredForDeletion"
+                               Canvas.Left="{Binding CurrentlyHovered.SelectedCoords.X, Converter={StaticResource math}, ConverterParameter=50 * x}"
+                               Canvas.Top="{Binding CurrentlyHovered.SelectedCoords.Y, Converter={StaticResource math}, ConverterParameter=50 * x}"
+                               Visibility="{Binding CurrentlyHovered.SelectionActive, Converter={StaticResource math}, ConverterParameter=visibleorhidden(x)}"
+                               Width="{Binding CurrentlyHovered.SelectedSize.X, Converter={StaticResource math}, ConverterParameter=x * 50}"
+                               Height="{Binding CurrentlyHovered.SelectedSize.Y, Converter={StaticResource math}, ConverterParameter=x * 50}"
+                               Opacity="0.8">
+
+                                <wpfui:Icon Visibility="{Binding CurrentlyHovered.IsValid, Converter={StaticResource math}, ConverterParameter=visibleorhidden(x)}"
+                                        Filled="True" Foreground="Black" Glyph="Delete48"/>
+
+                                <Rectangle Opacity="0.4">
+                                    <Rectangle.Style>
+                                        <Style TargetType="{x:Type Rectangle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentlyHovered.IsValid}" Value="True">
+                                                    <Setter Property="Fill" Value="Red"></Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding CurrentlyHovered.IsValid}" Value="False">
+                                                    <Setter Property="Fill" Value="Transparent"></Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Rectangle.Style>
+                                </Rectangle>
+                            </Grid>
+
+                            <Grid  x:Name="CurrentlySelectedForPlacement"
+                               Canvas.Left="{Binding CurrentlySelected.SelectedCoords.X, Converter={StaticResource math}, ConverterParameter=50 * x}"
+                               Canvas.Top="{Binding CurrentlySelected.SelectedCoords.Y, Converter={StaticResource math}, ConverterParameter=50 * x}"
+                               Visibility="{Binding CurrentlySelected.SelectionActive, Converter={StaticResource math}, ConverterParameter=visibleorhidden(x)}"
+                               Width="{Binding CurrentlySelected.SelectedSize.X, Converter={StaticResource math}, ConverterParameter=50 * x}"
+                               Height="{Binding CurrentlySelected.SelectedSize.Y, Converter={StaticResource math}, ConverterParameter=50 * x}"
+                               Opacity="0.8">
+                                <Image Source="{Binding CurrentlySelected.SelectedImage}" Stretch="Fill"/>
+
+                                <Rectangle Opacity="0.4">
+                                    <Rectangle.Style>
+                                        <Style TargetType="{x:Type Rectangle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentlySelected.IsValid}" Value="True">
+                                                    <Setter Property="Fill" Value="Green"></Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding CurrentlySelected.IsValid}" Value="False">
+                                                    <Setter Property="Fill" Value="Red"></Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Rectangle.Style>
+                                </Rectangle>
+                            </Grid>
+
+
+                        </local:GameGridView>
+                    </paz:ZoomBorder>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <wpfui:Card
+                    MinHeight="180"
+                    MaxHeight="400"
+                    Grid.Row="0"
+                    Padding="-2"
+                    Panel.ZIndex="10">
+                        <Border
+                        Margin="0"
+                        Padding="6"
+                        CornerRadius="0,0,6,6"
+                        BorderThickness="0">
+
+                            <!--Info card content-->
+                            <Grid>
+                                <ContentPresenter Grid.Row="0" Style="{StaticResource MyContentStyle}" Content="{Binding}"/>
+                            </Grid>
+
+                            <Border.Effect>
+                                <DropShadowEffect Direction="-75" ShadowDepth="2" Opacity="0.6" BlurRadius="25" Color="Black"/>
+                            </Border.Effect>
+                            <Border.Background>
+                                <LinearGradientBrush>
+                                    <GradientStop Offset="0" Color="#2b2a2a" />
+                                    <GradientStop Offset="4" Color="#2b2a2a" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </wpfui:Card>
+
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding PlaceableCategoryFields}">
+
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <wpfui:CardExpander
+                                            IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl},Path=DataContext.DemolishModeActive, Converter={StaticResource math}, ConverterParameter=!x}"
+                                            Name="PlaceableCard"
+                                            Margin="0,8,0,8"
+                                            Header="{Binding CategoryName}"
+                                            FontSize="16px"
+                                            FontWeight="ExtraBlack"
+                                            FontFamily="Tahoma"
+                                            Icon="{Binding CategoryIcon}"
+                                            IconFilled="True">
+                                    <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding PlaceableFields}">
+
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Vertical"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <!--Template for placeable card-->
+                                            <DataTemplate>
+                                                <Button FontFamily="{StaticResource DFontFamily}" HorizontalAlignment="Stretch" Margin="8px" Command="{Binding ClickCommand}">
+                                                    <StackPanel>
+                                                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Center" DockPanel.Dock="Top">
+                                                            <TextBlock  FontWeight="Bold" Text="{Binding Name}"/>
+                                                        </Viewbox>
+                                                        <Label Margin="0,8,0,4" HorizontalAlignment="Center" DockPanel.Dock="Right" FontSize="14" FontWeight="Normal" Content="{Binding Size}"/>
+                                                        <Image Margin="4,4,4,12" Source="{Binding Image}"/>
+                                                        <Label HorizontalAlignment="Center" DockPanel.Dock="Right" FontSize="20" FontWeight="ExtraBold" Content="{Binding Price}"/>
+                                                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Center" DockPanel.Dock="Bottom" Margin="0,16,0,-16">
+                                                            <TextBlock FontSize="14" FontWeight="Regular" LineHeight="24px" Text="{Binding DetailedInfo}"/>
+                                                        </Viewbox>
+                                                    </StackPanel>
+
+                                                    <Button.Style>
+                                                        <Style BasedOn="{StaticResource placeable_button}" TargetType="{x:Type Button}">
+                                                            <Style.Triggers>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Path=DataContext.CurrentlySelected.AnySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=Default}" Value="False" />
+                                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="False" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Background" Value="#37455c" />
+                                                                </MultiDataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Path=DataContext.CurrentlySelected.AnySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=Default}" Value="False" />
+                                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Background" Value="#2f3b4f" />
+                                                                </MultiDataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Path=DataContext.CurrentlySelected.AnySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=Default}" Value="True" />
+                                                                        <Condition Binding="{Binding Selected}" Value="True" />
+                                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Background" Value="#293445" />
+                                                                </MultiDataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Path=DataContext.CurrentlySelected.AnySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=Default}" Value="True" />
+                                                                        <Condition Binding="{Binding Selected}" Value="False" />
+                                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Background" Value="#4a5a75" />
+                                                                    <Setter Property="Opacity" Value="0.9" />
+                                                                </MultiDataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Path=DataContext.CurrentlySelected.AnySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=Default}" Value="True" />
+                                                                        <Condition Binding="{Binding Selected}" Value="True" />
+                                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="False" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Background" Value="#262e3b" />
+                                                                </MultiDataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Path=DataContext.CurrentlySelected.AnySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=Default}" Value="True" />
+                                                                        <Condition Binding="{Binding Selected}" Value="False" />
+                                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="False" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Background" Value="#676e7a" />
+                                                                    <Setter Property="Opacity" Value="0.75" />
+                                                                </MultiDataTrigger>
+
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Button.Effect">
+                                                                        <Setter.Value>
+                                                                            <DropShadowEffect Color="Black" Direction="-80" ShadowDepth="3" BlurRadius="5" Opacity="0.5" />
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </wpfui:CardExpander>
+                                <!-- Sets the margin for the first wpfui:CardExpander in the ScrollView -->
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                                        <Setter TargetName="PlaceableCard" Property="Margin" Value="0,32,0,8"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+
+                        <ItemsControl.Template>
+                            <ControlTemplate>
+                                <Border
+                        Margin="0"
+                        Padding="0"
+                        BorderThickness="0">
+                                    <ScrollViewer Padding="24,0,8,0">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                    <Border.Effect>
+                                        <DropShadowEffect Direction="-75" ShadowDepth="2" Opacity="0.6" BlurRadius="25" Color="Black"/>
+                                    </Border.Effect>
+                                    <Border.Background>
+                                        <LinearGradientBrush>
+                                            <GradientStop Offset="0" Color="#2b2a2a" />
+                                            <GradientStop Offset="1" Color="#202020" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                    </ItemsControl>
+                </Grid>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>

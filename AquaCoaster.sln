@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32126.315
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquaCoaster", "AquaCoaster\AquaCoaster.csproj", "{FB4790E0-9D19-43C2-B54A-77505D4B3699}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquaCoasterTest", "AquaCoasterTest\AquaCoasterTest.csproj", "{1A7CCF48-E8B4-428B-A8A2-2E46FFFB6B50}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FB4790E0-9D19-43C2-B54A-77505D4B3699}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB4790E0-9D19-43C2-B54A-77505D4B3699}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB4790E0-9D19-43C2-B54A-77505D4B3699}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB4790E0-9D19-43C2-B54A-77505D4B3699}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A7CCF48-E8B4-428B-A8A2-2E46FFFB6B50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A7CCF48-E8B4-428B-A8A2-2E46FFFB6B50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A7CCF48-E8B4-428B-A8A2-2E46FFFB6B50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A7CCF48-E8B4-428B-A8A2-2E46FFFB6B50}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9A1521FC-3597-4F76-B138-A3343C7C73F9}
+	EndGlobalSection
+EndGlobal
